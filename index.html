@@ -1,1 +1,180 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="js/webusb.js"></script>
+</head>
+<style>
+       table button{
+        width:80px;
+        border: 2px solid black;
+        padding:5px;
+        
+      }
+      .rx {
+        color: #0000ff;
+      }
+      .tx {
+        color: #ff0000;
+      }
+
+
+      #output {
+        overflow-y: scroll;
+        color:#ff0000;
+        margin-top:10px;
+        margin-bottom:10px;
+        display:block;
+        height: 200px;
+        border: 1px solid black;
+        padding-bottom: 20px;
+      }
+</style>
+
+<body>
+  <div class="container">
+    <video class="input_video" width="1px" height="1px"></video>
+    <canvas class="output_canvas" width="650px" height="320px" style="border: solid black 2px;"></canvas>
+    
+  </div>
+
+<div class="row header">
+    <button id="connect" class="button">Connect</button>
+</div>
+<div class="row header">
+  <button id="disconnect" class="button">Disconnect All</button>
+</div>
+
+<div id="console" class="row content" style="overflow:auto;border:4px solid black;padding:2%">
+  Waiting for connection.
+</div>   
+
+
+</div>
+ <script>
+    
+    // Append a line to the console frame
+    function consolePrintln(message) {
+        var con = document.getElementById("console")
+        con.appendChild(document.createTextNode(message))
+        con.appendChild(document.createElement("br"))
+        con.scrollTop = con.scrollHeight
+    }
+    function consolePrintlnBold(message) {
+        var con = document.getElementById("console")
+        let boldItem = document.createElement("b")
+        boldItem.innerHTML = message
+        con.appendChild(boldItem)
+        con.appendChild(document.createElement("br"))
+        con.scrollTop = con.scrollHeight
+    }
+
+    // List of connected devices (a single value could be used if only connecting to one device)
+    var connectedDevices = []
+
+    // Example event call-back handler
+    function uBitEventHandler(reason, device, data) {
+        switch(reason) {
+            case "connected":
+                consolePrintlnBold("Connected!")
+                connectedDevices.push(device)
+                break
+            case "disconnected":
+            consolePrintlnBold("Disconnected")
+                connectedDevices = connectedDevices.filter( v => v != device)
+                break
+            case "connection failure":
+            consolePrintlnBold("Connection Failure")
+                break
+            case "error":
+            consolePrintlnBold("Error")
+                break
+            case "console":
+                consolePrintln("Console Data: " + data.data)
+                break
+        }
+    }
+
+    document.getElementById("connect").addEventListener("click", () => uBitConnectDevice(uBitEventHandler))
+    document.getElementById("disconnect").addEventListener("click", () =>  { connectedDevices.forEach(d=>uBitDisconnect(d)); connectedDevices = [];})
+    document.getElementById("clear").addEventListener("click", () => { document.getElementById("console").innerHTML = "" })
+    document.getElementById("send").addEventListener("click", () => {  })
+   
+ </script>
+  <script type="module">
+    const videoElement = document.getElementsByClassName('input_video')[0];
+    const canvasElement = document.getElementsByClassName('output_canvas')[0];
+    const canvasCtx = canvasElement.getContext('2d');
+
+ 
+    
+    
+    function onResults(results) {
+      
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      //canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+      if (results.multiHandLandmarks) {
+    
+       
+        for (const landmarks of results.multiHandLandmarks) {
+           
+           console.log(canvasElement.width)
+           let x=landmarks[0].x*canvasElement.width;
+           let y=landmarks[0].y*canvasElement.height;
+           var cor = "X:"+x+"Y:"+y;
+           
+           console.log(x,y)
+           draw(x,y)
+
+           //drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,{color: '#00FF00', lineWidth: 5});
+           //drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
+        }
+      }
+
+      canvasCtx.restore();
+    }
+    
+    const hands = new Hands({locateFile: (file) => {
+      return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+    }});
+    hands.setOptions({
+      maxNumHands: 2,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    hands.onResults(onResults);
+    
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await hands.send({image: videoElement});
+      },
+      width: 1280,
+      height: 720
+    });
+    camera.start();
+
+
+
+  function draw(x,y) {
+    canvasCtx.beginPath();
+    canvasCtx.arc(x, y, 10, 0, Math.PI * 2);
+    canvasCtx.fillStyle = "#0095DD";
+    canvasCtx.fill();
+    canvasCtx.closePath();
+  }
+
+  function sendData(data){
+    connectedDevices.forEach( d=>uBitSend(d, data))
+  }
+
+    </script>
+</body>
+</html>
