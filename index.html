@@ -57,8 +57,8 @@
 
 </div>
  <script>
-   var lastXPos=0;
-   var lastYPos=0;
+   var lastXpos=0;
+   var lastYpos=0;
    var data="N";
     
     // Append a line to the console frame
@@ -136,6 +136,7 @@
            if (lastXpos > x){
             data="R"
            }
+           lastXpos=x;
            connectedDevices.forEach( d=>uBitSend(d, data)) 
            
            //var cor = "X:"+x+"Y:"+y;
