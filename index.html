@@ -57,6 +57,9 @@
 
 </div>
  <script>
+   var lastXPos=0;
+   var lastYPos=0;
+   var data="N";
     
     // Append a line to the console frame
     function consolePrintln(message) {
@@ -124,15 +127,22 @@
     
        
         for (const landmarks of results.multiHandLandmarks) {
-           
            console.log(canvasElement.width)
            let x=landmarks[0].x*canvasElement.width;
            let y=landmarks[0].y*canvasElement.height;
-           var cor = "X:"+x+"Y:"+y;
-           connectedDevices.forEach( d=>uBitSend(d, cor))
+           if (lastXpos < x){
+            data="L"  
+           }
+           if (lastXpos > x){
+            data="R"
+           }
+           connectedDevices.forEach( d=>uBitSend(d, data)) 
+           
+           //var cor = "X:"+x+"Y:"+y;
+
+           
            console.log(x,y)
            draw(x,y)
-
            //drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,{color: '#00FF00', lineWidth: 5});
            //drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
         }
