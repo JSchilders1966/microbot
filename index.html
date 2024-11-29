@@ -129,7 +129,7 @@
            let x=landmarks[0].x*canvasElement.width;
            let y=landmarks[0].y*canvasElement.height;
            var cor = "X:"+x+"Y:"+y;
-           
+           connectedDevices.forEach( d=>uBitSend(d, cor))
            console.log(x,y)
            draw(x,y)
 
