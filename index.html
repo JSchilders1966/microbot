@@ -130,16 +130,15 @@
            console.log(canvasElement.width)
            let x=landmarks[0].x*canvasElement.width;
            let y=landmarks[0].y*canvasElement.height;
-           if (lastXpos < x){
+           if (lastXpos < x*4){
             data="L"  
            }
-           if (lastXpos > x){
+           if (lastXpos > x*4){
             data="R"
            }
            lastXpos=x;
-           connectedDevices.forEach( d=>uBitSend(d, data)) 
+           sendData(data)
            
-           //var cor = "X:"+x+"Y:"+y;
 
            
            console.log(data)
